@@ -73,7 +73,32 @@ Diseñar e implementar una aplicación móvil para Android que integre actividad
 
 ## Imagenes
 
+### Menu
 <p align="center">
-  <img heigth="200" src="https://drive.google.com/uc?export=view&id=1B8cvcZzrUr_1Zt1236L1cPYozDk-pYIR" alt="My cool logo"/>
+  <img heigth="200" src="https://drive.google.com/uc?export=view&id=1B8cvcZzrUr_1Zt1236L1cPYozDk-pYIR" alt="Menu"/>
+  </p>
+  
+### Perfil
+<p align="center">
+  <img heigth="200" src="https://drive.google.com/uc?export=view&id=1XtZV3ZPi6iR_TxKeyoqOO81vQ8Jk0fXr" alt="Perfil"/>
   </p>
 
+### Fotos
+<p align="center">
+  <img heigth="200" src="https://drive.google.com/uc?export=view&id=1kEF-8-Eye1totcldYusau3QwEiyD6sYi" alt="Perfil"/>
+  </p>
+
+### Video
+<p align="center">
+  <img heigth="200" src="https://drive.google.com/uc?export=view&id=1ANSE2_pAz69JkeL2vyZa7gdvt_Lvbg9x" alt="Perfil"/>
+  </p>
+
+### Web
+<p align="center">
+  <img heigth="200" src="https://drive.google.com/uc?export=view&id=1QSGLWUihx6_FcxZEVdiYy05SeRW7RoJQ" alt="Perfil"/>
+  </p>
+
+### Botones
+<p align="center">
+  <img heigth="200" src="https://drive.google.com/uc?export=view&id=1r6uqqeEF6w2306RnBTRyhtSPY26sajl0" alt="Perfil"/>
+  </p>
