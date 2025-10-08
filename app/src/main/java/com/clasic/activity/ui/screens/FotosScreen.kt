@@ -1,6 +1,7 @@
 package com.clasic.activity.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -8,6 +9,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,11 +20,18 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
+
+data class PhotoItem(
+    val url: String,
+    val description: String
+)
 
 @Composable
 fun FotosScreen() {
     var likedItems by remember { mutableStateOf(setOf<String>()) }
+    var selectedPhoto by remember { mutableStateOf<PhotoItem?>(null) }
 
     val fotos = listOf(
         PhotoItem("https://picsum.photos/400/300", "Paisaje montañoso al atardecer con colores vibrantes"),
@@ -34,16 +44,33 @@ fun FotosScreen() {
         PhotoItem("https://picsum.photos/407/300", "Atardecer en el campo con siluetas")
     )
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    // Dialog para mostrar la descripción completa
+    selectedPhoto?.let { photo ->
+        PhotoDescriptionDialog(
+            photo = photo,
+            isLiked = likedItems.contains(photo.url),
+            onLikeClick = {
+                likedItems = if (likedItems.contains(photo.url)) {
+                    likedItems - photo.url
+                } else {
+                    likedItems + photo.url
+                }
+            },
+            onDismiss = { selectedPhoto = null }
+        )
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
         // Header
         Card(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer
-            )
+                .fillMaxWidth(),
+            elevation = CardDefaults.cardElevation(8.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
         ) {
             Column(
                 modifier = Modifier.padding(16.dp),
@@ -60,43 +87,34 @@ fun FotosScreen() {
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                 )
-
-                // Filtros rápidos
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 12.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    FilterChip(
-                        selected = true,
-                        onClick = { },
-                        label = { Text("Todas") }
-                    )
-                    FilterChip(
-                        selected = false,
-                        onClick = { },
-                        label = { Text("Favoritas") }
-                    )
-                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Toca cualquier foto para ver su descripción",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
+                )
             }
         }
 
-        // Lista de fotos en grid manual (2 columnas)
+        Spacer(Modifier.height(16.dp))
+
+        // LazyColumn scrollable con weight
         LazyColumn(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(8.dp)
+                .fillMaxWidth()
+                .weight(1f),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(fotos.chunked(2)) { rowItems ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     rowItems.forEach { photo ->
                         PhotoCard(
                             photo = photo,
                             isLiked = likedItems.contains(photo.url),
+                            onPhotoClick = { selectedPhoto = photo },
                             onLikeClick = {
                                 likedItems = if (likedItems.contains(photo.url)) {
                                     likedItems - photo.url
@@ -107,36 +125,32 @@ fun FotosScreen() {
                             modifier = Modifier.weight(1f)
                         )
                     }
-
-                    // Si hay un número impar de items, agregar un espacio vacío
-                    if (rowItems.size == 1) {
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
+                    if (rowItems.size == 1) Spacer(modifier = Modifier.weight(1f))
                 }
-                Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }
 }
 
-data class PhotoItem(val url: String, val description: String)
-
 @Composable
 fun PhotoCard(
     photo: PhotoItem,
     isLiked: Boolean,
+    onPhotoClick: () -> Unit,
     onLikeClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier
-            .padding(4.dp)
-            .height(200.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        shape = RoundedCornerShape(12.dp)
+            .height(200.dp)
+            .clip(RoundedCornerShape(12.dp)),
+        elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            // Imagen
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable { onPhotoClick() }
+        ) {
             AsyncImage(
                 model = photo.url,
                 contentDescription = photo.description,
@@ -144,7 +158,7 @@ fun PhotoCard(
                 contentScale = ContentScale.Crop
             )
 
-            // Gradient overlay para mejor legibilidad del texto
+            // Gradient overlay sutil
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -152,219 +166,292 @@ fun PhotoCard(
                         androidx.compose.ui.graphics.Brush.verticalGradient(
                             colors = listOf(
                                 androidx.compose.ui.graphics.Color.Transparent,
-                                androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.7f)
+                                androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.3f)
                             ),
                             startY = 300f
                         )
                     )
             )
 
-            // Badge de favorito
-            Box(
+            // Icono de like
+            IconButton(
+                onClick = {
+                    onLikeClick()
+                },
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(8.dp)
+                    .size(36.dp),
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.9f)
+                )
             ) {
-                IconButton(
-                    onClick = onLikeClick,
-                    modifier = Modifier.size(36.dp),
-                    colors = IconButtonDefaults.iconButtonColors(
-                        containerColor = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.9f)
-                    )
-                ) {
-                    androidx.compose.material3.Icon(
-                        imageVector = Icons.Default.Favorite,
-                        contentDescription = "Me gusta",
-                        tint = if (isLiked) androidx.compose.ui.graphics.Color.Red
-                        else androidx.compose.ui.graphics.Color.Gray
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Default.Favorite,
+                    contentDescription = "Me gusta",
+                    tint = if (isLiked) androidx.compose.ui.graphics.Color.Red
+                    else androidx.compose.ui.graphics.Color.Gray
+                )
             }
 
-            // Contenido inferior
-            Column(
+            // Indicador de que tiene descripción (icono de info)
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomStart)
-                    .padding(12.dp)
+                    .align(Alignment.TopStart)
+                    .padding(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = "Ver descripción",
+                    tint = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.8f),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            // Texto indicador para tocar
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 8.dp)
             ) {
                 Text(
-                    text = photo.description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = androidx.compose.ui.graphics.Color.White,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    text = "Toca para ver detalles",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.8f)
                 )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                // Acciones
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Hace 2 días",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.8f)
-                    )
-
-                    IconButton(
-                        onClick = { /* Share action */ },
-                        modifier = Modifier.size(24.dp)
-                    ) {
-                        androidx.compose.material3.Icon(
-                            imageVector = Icons.Default.Share,
-                            contentDescription = "Compartir",
-                            tint = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.8f)
-                        )
-                    }
-                }
             }
         }
     }
 }
 
-// Alternativa más simple si prefieres una lista vertical
 @Composable
-fun FotosScreenSimple() {
-    var likedItems by remember { mutableStateOf(setOf<String>()) }
-
-    val fotos = listOf(
-        PhotoItem("https://picsum.photos/400/300", "Paisaje montañoso al atardecer"),
-        PhotoItem("https://picsum.photos/401/300", "Ciudad moderna con rascacielos"),
-        PhotoItem("https://picsum.photos/402/300", "Playa tropical con palmeras"),
-        PhotoItem("https://picsum.photos/403/300", "Bosque nevado en invierno"),
-        PhotoItem("https://picsum.photos/404/300", "Desierto con dunas de arena"),
-        PhotoItem("https://picsum.photos/405/300", "Aurora boreal en el cielo nocturno")
-    )
-
-    Column(modifier = Modifier.fillMaxSize()) {
-        // Header
+fun PhotoDescriptionDialog(
+    photo: PhotoItem,
+    isLiked: Boolean,
+    onLikeClick: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismiss
+    ) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer
-            )
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(16.dp)
         ) {
             Column(
-                modifier = Modifier.padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier = Modifier
+                    .fillMaxWidth()
             ) {
-                Text(
-                    text = "Galería de Fotos",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-                Text(
-                    text = "${fotos.size} imágenes en tu galería",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                )
-            }
-        }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(300.dp)
+                ) {
+                    AsyncImage(
+                        model = photo.url,
+                        contentDescription = photo.description,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
 
-        // Lista vertical simple
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(fotos) { photo ->
-                PhotoListItem(
-                    photo = photo,
-                    isLiked = likedItems.contains(photo.url),
-                    onLikeClick = {
-                        likedItems = if (likedItems.contains(photo.url)) {
-                            likedItems - photo.url
-                        } else {
-                            likedItems + photo.url
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(16.dp)
+                            .size(40.dp),
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.5f)
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Cerrar",
+                            tint = androidx.compose.ui.graphics.Color.White
+                        )
+                    }
+
+                    // Botón de like en el dialog
+                    IconButton(
+                        onClick = onLikeClick,
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(16.dp)
+                            .size(40.dp),
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.5f)
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Favorite,
+                            contentDescription = "Me gusta",
+                            tint = if (isLiked) androidx.compose.ui.graphics.Color.Red
+                            else androidx.compose.ui.graphics.Color.White
+                        )
+                    }
+                }
+
+                // Contenido del dialog
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp)
+                ) {
+                    Text(
+                        text = "Descripción",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+
+                    Text(
+                        text = photo.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Botones de acción
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(
+                            onClick = onDismiss
+                        ) {
+                            Text("Cerrar")
+                        }
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Button(
+                            onClick = {
+                                // Acción para compartir
+                                onDismiss()
+                            }
+                        ) {
+                            Icon(Icons.Default.Share, contentDescription = null)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Compartir")
                         }
                     }
-                )
+                }
             }
         }
     }
 }
 
+// Versión simplificada sin el lineHeight si prefieres
 @Composable
-fun PhotoListItem(photo: PhotoItem, isLiked: Boolean, onLikeClick: () -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        shape = RoundedCornerShape(12.dp)
+fun PhotoDescriptionDialogSimple(
+    photo: PhotoItem,
+    isLiked: Boolean,
+    onLikeClick: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismiss
     ) {
-        Row(
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(120.dp)
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(16.dp)
         ) {
-            // Imagen
-            AsyncImage(
-                model = photo.url,
-                contentDescription = photo.description,
-                modifier = Modifier
-                    .width(120.dp)
-                    .fillMaxHeight(),
-                contentScale = ContentScale.Crop
-            )
-
-            // Contenido
             Column(
                 modifier = Modifier
-                    .weight(1f)
-                    .padding(12.dp)
+                    .fillMaxWidth()
             ) {
-                Text(
-                    text = photo.description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                // Imagen
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(250.dp)
                 ) {
-                    Text(
-                        text = "Hace 2 días",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    AsyncImage(
+                        model = photo.url,
+                        contentDescription = photo.description,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
                     )
 
-                    Row {
+                    // Botón de cerrar
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(12.dp)
+                            .size(36.dp),
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.5f)
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Cerrar",
+                            tint = androidx.compose.ui.graphics.Color.White
+                        )
+                    }
+                }
+
+                // Contenido
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    // Fila con like y título
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Descripción",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+
                         IconButton(
                             onClick = onLikeClick,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(32.dp)
                         ) {
-                            androidx.compose.material3.Icon(
+                            Icon(
                                 imageVector = Icons.Default.Favorite,
                                 contentDescription = "Me gusta",
                                 tint = if (isLiked) androidx.compose.ui.graphics.Color.Red
                                 else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                             )
                         }
+                    }
 
-                        IconButton(
-                            onClick = { /* Share */ },
-                            modifier = Modifier.size(24.dp)
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Descripción
+                    Text(
+                        text = photo.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Botones
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        Button(
+                            onClick = onDismiss
                         ) {
-                            androidx.compose.material3.Icon(
-                                imageVector = Icons.Default.Share,
-                                contentDescription = "Compartir",
-                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                            )
+                            Text("Aceptar")
                         }
                     }
                 }
