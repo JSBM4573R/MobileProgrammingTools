@@ -74,6 +74,6 @@ Diseñar e implementar una aplicación móvil para Android que integre actividad
 ## Imagenes
 
 <p align="center">
-  <img heigth="800" src="/src/main/resources/static/img/imagen.png" alt="imagen"/>
+  ![Mi imagen](https://drive.google.com/uc?export=view&id=1B8cvcZzrUr_1Zt1236L1cPYozDk-pYIR)
   </p>
 
