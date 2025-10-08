@@ -102,3 +102,140 @@ Diseñar e implementar una aplicación móvil para Android que integre actividad
 <p align="center">
   <img heigth="200" src="https://drive.google.com/uc?export=view&id=1r6uqqeEF6w2306RnBTRyhtSPY26sajl0" alt="Perfil"/>
   </p>
+
+
+
+# Características Principales
+
+    Interfaz moderna basada en Material Design 3
+
+    Soporte de tema claro y oscuro automático
+
+    Navegación mediante panel lateral (drawer)
+
+    Integración de imágenes, video y navegación web
+
+    Componentes interactivos y diseño adaptable
+    
+# Pantallas Implementadas
+
+    Perfil: Presentación de información personal con imagen y descripción.
+
+    Fotos: Galería de imágenes en cuadrícula con visualización básica.
+
+    Video: Reproductor integrado con ExoPlayer y controles personalizados.
+
+    Web: Navegador web interno con barra de búsqueda y controles de navegación.
+
+    Botones: Ejemplos de distintos estilos y variantes de botones.
+
+Tecnologías Utilizadas
+# Lenguajes y Frameworks
+
+    Kotlin
+
+    Jetpack Compose
+
+    Material Design 3
+
+# Principales Dependencias
+    // Jetpack Compose
+    implementation("androidx.activity:activity-compose:1.9.0")
+    implementation("androidx.compose.ui:ui:1.6.2")
+    implementation("androidx.compose.material3:material3:1.2.1")
+
+    // Navegación
+    implementation("androidx.navigation:navigation-compose:2.7.7")
+
+    // Imágenes
+    implementation("io.coil-kt:coil-compose:2.4.0")
+
+    // Video
+    implementation("androidx.media3:media3-exoplayer:1.3.1")
+    implementation("androidx.media3:media3-ui:1.3.1")
+
+    // WebView
+    implementation("com.google.accompanist:accompanist-webview:0.30.1")
+
+# Requisitos de Entorno
+
+    - Android Studio: Hedgehog o superior
+
+    - SDK mínimo: API 24 (Android 7.0)
+
+    - SDK de compilación: API 35
+
+    - Gradle: 8.0+
+
+    - JVM target: 11
+
+# Estructura del Proyecto
+app/
+├── src/main/java/com/clasic/activity/
+│   ├── MainActivity.kt
+│   ├── ui/
+│   │   ├── navigation/
+│   │   │   ├── NavGraph.kt
+│   │   ├── screens/
+│   │   │   ├── ProfileScreen.kt
+│   │   │   ├── PhotoScreen.kt
+│   │   │   ├── VideoScreen.kt
+│   │   │   ├── WebScreen.kt
+│   │   │   └── ButtonScreen.kt
+│   │   └── theme/
+│   │       ├── Theme.kt
+│   │       └── Typography.kt
+└── build.gradle.kts
+
+Instalación y Ejecución
+# Requisitos Previos
+
+    Android Studio configurado correctamente
+
+    SDK de Android API 35
+
+    Emulador o dispositivo físico con Android 7.0 o superior
+
+# Pasos
+
+    Clonar o descargar el repositorio
+
+    Abrir el proyecto en Android Studio
+
+    Esperar la sincronización de dependencias
+
+    Ejecutar en un emulador o dispositivo
+
+# Comandos Útiles
+    # Compilar en modo debug
+    ./gradlew assembleDebug
+
+    # Limpiar el proyecto
+    ./gradlew clean
+
+# Navegación
+
+    La navegación se implementó con Navigation Compose.
+    Se utiliza un drawer lateral para moverse entre las distintas pantallas, y las rutas están definidas en una clase sealed para mayor claridad y seguridad en la navegación.
+
+Ejemplo:
+
+sealed class Screens(val route: String) {
+    object Perfil : Screens("perfil")
+    object Fotos : Screens("fotos")
+    object Video : Screens("video")
+    object Web : Screens("web")
+    object Botones : Screens("botones")
+}
+
+# Decisiones de Diseño
+
+    UI declarativa con Jetpack Compose (sin XML).
+
+    Estado reactivo con remember y mutableState.
+
+    Navegación fluida y declarativa.
+
+    Estructura modular y clara para separar pantallas y navegación.
+
+    Consistencia visual siguiendo Material Design 3.

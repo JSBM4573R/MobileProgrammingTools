@@ -3,20 +3,22 @@ package com.clasic.activity
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.ui.Alignment
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.clasic.activity.ui.screens.*
+import androidx.navigation.compose.rememberNavController
+import com.clasic.activity.ui.navigation.NavGraph
+import com.clasic.activity.ui.navigation.Screens
 import com.clasic.activity.ui.theme.ClasicActivityTheme
 import kotlinx.coroutines.launch
 
@@ -25,7 +27,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             ClasicActivityTheme {
-                MyApp()
+                MainApp()
             }
         }
     }
@@ -33,8 +35,8 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MyApp() {
-    val drawerState = rememberDrawerState(androidx.compose.material3.DrawerValue.Closed)
+fun MainApp() {
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val navController = rememberNavController()
 
@@ -51,34 +53,50 @@ fun MyApp() {
                 )
                 Divider()
 
-                val menuItems = listOf(
-                    MenuItem("Perfil", Icons.Default.Person, "perfil"),
-                    MenuItem("Fotos", Icons.Default.Photo, "fotos"),
-                    MenuItem("Video", Icons.Default.PlayArrow, "video"),
-                    MenuItem("Web", Icons.Default.Public, "web"),
-                    MenuItem("Botones", Icons.Default.Settings, "botones")
-                )
-
-                menuItems.forEach { item ->
+                listOf(
+                    Screens.Perfil to Icons.Default.Person,
+                    Screens.Fotos to Icons.Default.Photo,
+                    Screens.Video to Icons.Default.PlayArrow,
+                    Screens.Web to Icons.Default.Public,
+                    Screens.Botones to Icons.Default.Settings
+                ).forEach { (screen, icon) ->
                     NavigationDrawerItem(
-                        label = { Text(item.title) },
-                        selected = false,
-                        icon = { Icon(item.icon, contentDescription = item.title) },
+                        label = { 
+                            Text(
+                                when (screen) {
+                                    Screens.Perfil -> "Perfil"
+                                    Screens.Fotos -> "Fotos"
+                                    Screens.Video -> "Video"
+                                    Screens.Web -> "Web"
+                                    Screens.Botones -> "Botones"
+                                }
+                            ) 
+                        },
+                        selected = navController.currentDestination?.route == screen.route,
+                        icon = { Icon(icon, contentDescription = screen.route) },
                         onClick = {
-                            navController.navigate(item.route)
+                            navController.navigate(screen.route) {
+                                launchSingleTop = true
+                                restoreState = true
+                                popUpTo(navController.graph.startDestinationId) {
+                                    saveState = true
+                                }
+                            }
                             scope.launch { drawerState.close() }
                         },
                         modifier = Modifier.padding(horizontal = 12.dp)
                     )
                 }
-
+                
                 Divider(modifier = Modifier.padding(vertical = 16.dp))
-
+                
                 NavigationDrawerItem(
                     label = { Text("Salir") },
                     selected = false,
                     icon = { Icon(Icons.Default.ExitToApp, contentDescription = "Salir") },
-                    onClick = { /* Acción salir */ },
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                    },
                     modifier = Modifier.padding(horizontal = 12.dp)
                 )
             }
@@ -90,7 +108,7 @@ fun MyApp() {
                 CenterAlignedTopAppBar(
                     title = {
                         Text(
-                            "Mi Aplicación",
+                            "Clasic Activity",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
@@ -113,17 +131,13 @@ fun MyApp() {
             },
             containerColor = MaterialTheme.colorScheme.background
         ) { innerPadding ->
-            Box(modifier = Modifier.padding(innerPadding)) {
-                NavHost(navController, startDestination = "perfil") {
-                    composable("perfil") { PerfilScreen() }
-                    composable("fotos") { FotosScreen() }
-                    composable("video") { VideoScreen() }
-                    composable("web") { WebScreen() }
-                    composable("botones") { BotonesScreen() }
-                }
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                NavGraph(navController = navController)
             }
         }
     }
 }
-
-data class MenuItem(val title: String, val icon: androidx.compose.ui.graphics.vector.ImageVector, val route: String)
